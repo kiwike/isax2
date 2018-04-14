@@ -8,15 +8,20 @@ namespace SaxIndex
 {
     static class Program
     {
-        static int SEED = 1416; // s
-        static int NUM_TIMESERIES = 200000; // i
+        static String output = "SAX_Word;iSAX_Word;type;dir;filename;parent;split_depth;mask;num_nodes;num_ts\n";
 
-        static int TIMESERIES_LENGTH = 128;
-        static ushort BASE_CARDINALITY = 2; // c
+        static int SEED = 1416; // s
+        static int NUM_TIMESERIES = 100; // i
+
+        //static int TIMESERIES_LENGTH = 128;
+        static int TIMESERIES_LENGTH = 33;
+        //static ushort BASE_CARDINALITY = 2; // c
+        static ushort BASE_CARDINALITY = 4; // c
         static ushort MAX_CARDINALITY = 512;
         static int MAX_ENTRIES = 10; // x
-        static byte WORDLENGTH = 8; // w
-        static string ROOT_DIR = @"C:\Temp\test3";
+        //static byte WORDLENGTH = 8; // w
+        static byte WORDLENGTH = 4; // w
+        static string ROOT_DIR = @"/tmp/test3";
 
         static int FLUSHPAR = 200000;
         static Boolean NEWSPLITPOLICY = true;
@@ -27,10 +32,10 @@ namespace SaxIndex
             Console.WriteLine("ComputerInfo:");
             Console.WriteLine("-------------");
             Console.WriteLine("{0,-30}:\t{1}", "Platform", computerInfo.OSPlatform);
-            Console.WriteLine("{0,-30}:\t{1}", "TotalPhysicalMemory", computerInfo.TotalPhysicalMemory);
-            Console.WriteLine("{0,-30}:\t{1}", "AvailablePhysicalMemory", computerInfo.AvailablePhysicalMemory);
-            Console.WriteLine("{0,-30}:\t{1}", "TotalVirtualMemory", computerInfo.TotalVirtualMemory);
-            Console.WriteLine("{0,-30}:\t{1}", "AvailableVirtualMemory", computerInfo.AvailableVirtualMemory);
+            //Console.WriteLine("{0,-30}:\t{1}", "TotalPhysicalMemory", computerInfo.TotalPhysicalMemory);
+            //Console.WriteLine("{0,-30}:\t{1}", "AvailablePhysicalMemory", computerInfo.AvailablePhysicalMemory);
+            //Console.WriteLine("{0,-30}:\t{1}", "TotalVirtualMemory", computerInfo.TotalVirtualMemory);
+            //Console.WriteLine("{0,-30}:\t{1}", "AvailableVirtualMemory", computerInfo.AvailableVirtualMemory);
             Console.WriteLine();
             Console.WriteLine("Current Settings:");
             Console.WriteLine("-----------------");
@@ -115,6 +120,8 @@ namespace SaxIndex
             Console.WriteLine("{0} approximate results == exact results.", counter);
             Console.WriteLine();
         }
+
+
         public static void SearchQualityExperiment()
         {
             DateTime startTime = DateTime.Now;
@@ -256,9 +263,87 @@ namespace SaxIndex
                 NEWSPLITPOLICY = bool.Parse(args[2]);
             }
             InitalizeGlobalSettings();
-            BaseIndex();
+            //BaseIndex();
+
+            // Test 1 - Reading from GeneratedRawDataIndex
+            /*Index<RawDataFormat> testIndex = Index<RawDataFormat>.Load(Globals.IndexRootDir);
+            Double[] query = Util.RandomWalk(2);
+            IndexEntry result = testIndex.ApproximateSearch(query);
+            List<RawDataFormat> timeSeries = testIndex.ReturnDataFormatFromTermEntry((TermEntry)result);*/
+
+
+            // Test 2 - Reading from FileRawDataLoader
+            //const string DATA_FILE = @"/Users/ppo/Documents/Thesis/test";
+            const string DATA_FILE = @"/Users/ppo/Dropbox/Thesis/datasets/SonyAIBORobotSurfaceII/SonyAIBORobotSurfaceII_TRAIN_SHAPELET_32_space";
+            Index<RawShapeletFormat> anotherIndex = new Index<RawShapeletFormat>(0, new IndexOptions("root"));
+            DataLoader dl = new FromFileRawShapeletLoader(anotherIndex, DATA_FILE, 10000);
+            InsertTimeSeries(dl);
+            Index<RawShapeletFormat>.Save(Globals.IndexRootDir, anotherIndex);
+            Index<RawShapeletFormat> loadBack = Index<RawShapeletFormat>.Load(Globals.IndexRootDir);
+
+            OutputIndex(loadBack, "root");
+            using (StreamWriter sw = new StreamWriter(Path.Combine(Globals.IndexRootDir, "indexOutput.csv"))) {
+                sw.Write(output);
+            }
+
+            /*foreach (IndexEntry i in anotherIndex.GetIndexEntries()) {
+                if (i is TermEntry) {
+                    ((TermEntry)i).ToString();
+                } else {
+                    foreach (IndexEntry j in ((SplitEntry<RawShapeletFormat>)i).GetIndexEntries())
+                    {
+                        if (j is TermEntry)
+                        {
+                            ((TermEntry)j).ToString();
+                        } else {
+                            ((SplitEntry<RawShapeletFormat>)j).GetIndexEntries();
+                        }
+                    }
+                }
+            }*/
+
+            for (int i = 0; i < 100; i++)
+            {
+                Double[] query = Util.RandomWalk(4);
+                IndexEntry result = anotherIndex.ApproximateSearch(query);
+                List<RawShapeletFormat> timeSeries = anotherIndex.ReturnDataFormatFromTermEntry((TermEntry)result);
+            }
             //Console.WriteLine("Press Enter to exit program.");
             //Console.ReadLine();
+        }
+
+        public static void OutputIndex(Index<RawShapeletFormat> index, String parent) {
+            int splitDepth = index.SplitDepth;
+            foreach (IndexEntry i in index.GetIndexEntries())
+            {
+                if (i is TermEntry)
+                {
+                    TermEntry term = ((TermEntry)i);
+                    String saxWord = term.SaxWord;
+                    String iSaxWord = term.iSaxWord;
+                    String fileName = term.FileName;
+                    int numNodes = term.NumNodes;
+                    int numTimeSeries = term.NumTimeSeries;
+                    System.Console.WriteLine("SAX word: {0}, iSax word: {1}, file name: {2}, parent: {3}, split depth: {4}, num nodes: {5}, num TS: {6}", saxWord, iSaxWord, fileName, parent, splitDepth, numNodes, numTimeSeries);
+                    String[] line = { saxWord, iSaxWord, "TermEntry", "", fileName, parent, splitDepth.ToString(), "", numNodes.ToString(), numTimeSeries.ToString() };
+                    output = output + String.Join(";", line) + "\n";
+                }
+                else
+                {
+                    SplitEntry<RawShapeletFormat> split = (SplitEntry<RawShapeletFormat>)i;
+                    String saxWord = split.SaxWord;
+                    String iSaxWord = split.iSaxWord;
+                    String baseDir = split.Options.BaseDir;
+                    String maskValue = split.Options.maskValue();
+                    int numNodes = split.NumNodes;
+                    int numTimeSeries = split.NumTimeSeries;
+                    System.Console.WriteLine("SAX word: {0}, iSax word: {1}, dir: {2}, mask: {3}, split depth: {4}, num nodes: {5}, num TS: {6}", saxWord, iSaxWord, baseDir, maskValue, splitDepth, numNodes, numTimeSeries);
+                    String[] line = { saxWord, iSaxWord, "SplitEntry", baseDir, "", parent, splitDepth.ToString(), maskValue, numNodes.ToString(), numTimeSeries.ToString() };
+                    output = output + String.Join(";", line) + "\n";
+                    Index<RawShapeletFormat> splitIndex = split.GetIndex();
+                    OutputIndex(splitIndex, saxWord);
+                }
+            }
         }
 
         public static void InsertTimeSeries(DataLoader dl)
