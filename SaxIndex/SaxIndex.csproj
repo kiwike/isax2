@@ -72,7 +72,6 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
@@ -101,6 +100,7 @@
     <Compile Include="Util.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="FromFileRawShapeletLoader.cs" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
@@ -145,7 +145,4 @@
   <Target Name="AfterBuild">
   </Target>
   -->
-  <PropertyGroup>
-    <PostBuildEvent>editbin.exe /LARGEADDRESSAWARE "$(TargetPath)"</PostBuildEvent>
-  </PropertyGroup>
 </Project>
