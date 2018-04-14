@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace SaxIndex
@@ -181,5 +182,66 @@ namespace SaxIndex
 
         public long meta;
         private double[] data;
+    }
+
+    // Shapelet data
+    // data directly
+    public struct RawShapeletFormat : IDataFormat
+    {
+        public static int ByteLength
+        {
+            get { return Globals.TimeSeriesByteLength; }
+        }
+
+        public RawShapeletFormat(double[] data, double ts)
+        {
+            this.data = data;
+            this.ts = (int) ts;
+        }
+
+        #region IDataLocation Members
+
+        public void InitFromByteArray(byte[] b)
+        {
+            //data = Util.ByteArrayToDoubleArray(b);
+            if (b.Length % sizeof(double) != 0)
+                throw new ApplicationException("byteArray.Length % SIZEOF_DOUBLE != 0");
+            double[] d = new double[b.Length / sizeof(double)];
+            Buffer.BlockCopy(b, 0, d, 0, b.Length);
+            ts = (int) d[0];
+            data = d.Skip(1).ToArray();
+        }
+
+        /*public void InitFromByteArray(byte[] b, byte t)
+        {
+            data = Util.ByteArrayToDoubleArray(b);
+            ts = t;
+        }*/
+
+        public byte[] ToByteArray()
+        {
+            //return Util.DoubleArrayToByteArray(data);
+            byte[] b = new byte[(data.Length + 1) * sizeof(double)];
+            double[] concat = new double[data.Length + 1];
+            concat[0] = this.ts;
+            data.CopyTo(concat, 1);
+            Buffer.BlockCopy(concat, 0, b, 0, b.Length);
+            return b;
+        }
+
+        public double[] GetTimeSeries()
+        {
+            return data;
+        }
+
+        public int GetParentTs()
+        {
+            return ts;
+        }
+
+        #endregion
+
+        private double[] data;
+        private int ts;
     }
 }
