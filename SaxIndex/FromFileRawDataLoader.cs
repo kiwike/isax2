@@ -50,7 +50,8 @@ namespace SaxIndex
             }
 
             this.sr.Close();
-            this.si.ForceFlushBuffers();
+            //this.si.ForceFlushBuffers();
+            this.si.FlushEntries();
             Console.WriteLine("Total: {0}", this.processed);
         }
 
