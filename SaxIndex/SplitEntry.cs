@@ -28,9 +28,29 @@ namespace SaxIndex
             index.Insert(dr);
         }
 
+        public Index<DLFormat> GetIndex() {
+            return index;
+        }
+
         public override string ToString()
         {
             return Path.Combine(Path.GetFileNameWithoutExtension(index.WorkingFolder), SaxWord);
+        }
+
+        public string GetiSaxWord()
+        {
+            String[] saxWord = this.saxWord.Split('_');
+            String[] maskValue = index.Options.maskValue().Split(' ');
+            String iSaxWord = "";
+            if (saxWord.Length == maskValue.Length)
+            {
+                for (int i = 0; i < saxWord.Length; i++)
+                {
+                    iSaxWord = iSaxWord + saxWord[i] + "." + maskValue[i] + " ";
+                }
+                iSaxWord = iSaxWord.Substring(0, iSaxWord.Length - 1);
+            }
+            return iSaxWord;
         }
 
         #endregion // PUBLIC METHODS
@@ -76,6 +96,14 @@ namespace SaxIndex
             get
             {
                 return saxWord;
+            }
+        }
+
+        public string iSaxWord
+        {
+            get
+            {
+                return GetiSaxWord();
             }
         }
 
