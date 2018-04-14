@@ -508,7 +508,8 @@ namespace SaxIndex
             if (splitDepth == 0)
             {
                 if (Directory.Exists(Globals.IndexRootDir))
-                    throw new ApplicationException("iSax index cannot be constructed in a pre-existing directory.");
+                    Directory.Delete(Globals.IndexRootDir, true);
+                    //throw new ApplicationException("iSax index cannot be constructed in a pre-existing directory.");
                 Directory.CreateDirectory(Globals.IndexRootDir);
             }
 
@@ -583,6 +584,14 @@ namespace SaxIndex
             get
             {
                 return Path.Combine(Globals.IndexRootDir, options.BaseDir);
+            }
+        }
+
+        public byte SplitDepth
+        {
+            get
+            {
+                return this.splitDepth;
             }
         }
 
