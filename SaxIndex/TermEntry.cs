@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
+using System.Text.RegularExpressions;
 
 namespace SaxIndex
 {
@@ -138,6 +139,14 @@ namespace SaxIndex
             }
         }
 
+        public string iSaxWord
+        {
+            get
+            {
+                return TermEntry.FileNameParseiSaxStr(fName);
+            }
+        }
+
         #endregion // PUBLIC PROPERTIES
 
         #region PUBLIC VARIABLES
@@ -161,13 +170,33 @@ namespace SaxIndex
         {
             //return Path.GetFileNameWithoutExtension(Path.GetFileNameWithoutExtension(line));
             string saxstring = "";
-            line = line.Substring(line.LastIndexOf("\\")+1);
+            line = line.Substring(line.LastIndexOf("/")+1);
             for (int i = 0; i < Globals.SaxWordLength; i++) { 
                 saxstring=saxstring+ line.Substring(0,line.IndexOf("."))+"_";
                 line=line.Substring(line.IndexOf("_")+1);
             }
             saxstring = saxstring.Substring(0, saxstring.Length - 1);
             return saxstring;
+        }
+
+        public static string FileNameParseiSaxStr(string line) 
+        {
+            //return Path.GetFileNameWithoutExtension(Path.GetFileNameWithoutExtension(line));
+            string isaxstring = "";
+            line = line.Substring(line.LastIndexOf("/") + 1);
+            string search = @"[0-9]+\.[0-9]+";
+            MatchCollection matches = Regex.Matches(line, search);
+            foreach (Match m in matches)
+            {
+                isaxstring = isaxstring + m.Value + " ";
+            }
+            /*for (int i = 0; i < Globals.SaxWordLength; i++)
+            {
+                isaxstring = isaxstring + line.Substring(0, line.IndexOf('.', line.IndexOf(".")+1)) + " ";
+                line = line.Substring(line.IndexOf("_") + 1);
+            }*/
+            isaxstring = isaxstring.Substring(0, isaxstring.Length - 1);
+            return isaxstring;
         }
 
         #endregion
