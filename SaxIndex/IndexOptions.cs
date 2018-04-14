@@ -24,6 +24,17 @@ namespace SaxIndex
             return base.GetHashCode();//update
         }
 
+        public String maskValue()
+        {
+            String maskValue = "";
+            foreach (ushort m in this.SaxOpts.Mask)
+            {
+                maskValue = maskValue + m.ToString() + " ";
+            }
+            maskValue = maskValue.Substring(0, maskValue.Length - 1);
+            return maskValue;
+        }
+
         #endregion
 
         #region CLASS CONSTRUCTORS
