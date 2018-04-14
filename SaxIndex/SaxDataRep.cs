@@ -73,6 +73,9 @@ namespace SaxIndex
             {
                 val += Meta3DataFormat.ByteLength;
             }
+            else if (dataFormatType == typeof(RawShapeletFormat)) {
+                val += RawShapeletFormat.ByteLength;
+            }
             else
             {
                 throw new NotImplementedException("Invalid FormatType");
